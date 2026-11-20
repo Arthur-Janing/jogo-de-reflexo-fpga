@@ -22,7 +22,7 @@ Araranguá, 2026
 
 ## Resumo
 
-Este trabalho apresenta um jogo de tempo de reação feito na placa DE10-Lite (FPGA MAX 10). O jogador aperta um botão para começar, espera os LEDs acenderem depois de um tempo sorteado e aperta de novo o mais rápido que conseguir. O tempo aparece no display de 7 segmentos em milissegundos, e o programa guarda o recorde e um ranking dos 5 melhores tempos. A medição do tempo foi feita em hardware próprio, em Verilog, e as regras do jogo rodam num processador Nios II (soft processor) montado dentro da FPGA e programado em C. O projeto também tem uma saída VGA opcional, que muda a cor da tela conforme o momento do jogo. O sistema foi simulado no ModelSim e compilado no Quartus Prime Lite 18.1.
+Este trabalho apresenta um jogo de tempo de reação feito na placa DE10-Lite (FPGA MAX 10). O jogador aperta um botão para começar, espera os LEDs acenderem depois de um tempo sorteado e aperta de novo o mais rápido que conseguir. O tempo aparece no display de 7 segmentos em milissegundos, e o programa guarda o recorde e um ranking dos 5 melhores tempos. A medição do tempo foi feita em hardware próprio, em Verilog, e as regras do jogo rodam num processador Nios II (soft processor) montado dentro da FPGA e programado em C. O projeto também tem uma saída VGA opcional, que muda a cor da tela conforme o momento do jogo. O sistema foi simulado no ModelSim, compilado no Quartus Prime Lite 18.1 e testado na placa.
 
 **Palavras-chave:** FPGA, Verilog, Nios II, soft processor, DE10-Lite.
 
@@ -90,9 +90,7 @@ Seu tempo: 0.180 s
 ---------------------
 ```
 
-<!-- FIGURA: print do terminal com o ranking
-<p align="center"><img src="docs/img/terminal.png" width="550"><br><i>Figura 1 - Terminal do Nios mostrando os tempos e o ranking</i></p>
--->
+<p align="center"><img src="docs/img/terminal.png" width="550"><br><i>Figura 1 - Terminal do Nios durante o teste na placa</i></p>
 
 ## 3. Arquitetura do projeto
 
@@ -410,23 +408,36 @@ O timing passa com folga: o caminho mais lento leva uns 12 ns e o clock dá 20 n
 
 ## 11. Testes na placa
 
-<!-- FIGURAS: fotos da placa funcionando
-<p align="center"><img src="docs/img/placa_play.jpg" width="450"><br><i>Figura 8 - Placa no início da rodada, mostrando PLAY</i></p>
+Gravamos o projeto na DE10-Lite com o `JOGAR.bat` e testamos todas as regras do jogo. O VGA ainda não foi testado na placa porque não tínhamos um monitor com entrada VGA na hora do teste.
+
+| Teste | Resultado |
+|---|---|
+| Início | display mostra `PLAY` |
+| Começar a rodada (KEY0) | display mostra `----` e espera o tempo sorteado |
+| Hora de apertar | os 10 LEDs acendem |
+| Apertar o KEY0 | o tempo aparece no display (ex. 0.150) e no terminal |
+| Novo recorde | os LEDs piscam 3 vezes e o terminal mostra NOVO RECORDE |
+| Apertar antes dos LEDs | display mostra `CEdO` e a rodada não vale |
+| Ninguém aperta | o tempo para em `9.999` e o terminal mostra Tempo esgotado |
+| Várias rodadas | o ranking fica em ordem, do menor tempo pro maior |
+
+O melhor tempo que conseguimos foi 0,150 s. A maioria das rodadas ficou entre 0,15 e 0,40 s.
+
+<p align="center"><img src="docs/img/placa_play.jpg" width="450"><br><i>Figura 8 - Início da rodada, display mostrando PLAY</i></p>
 
 <p align="center"><img src="docs/img/placa_espera.jpg" width="450"><br><i>Figura 9 - Esperando os LEDs acenderem</i></p>
 
-<p align="center"><img src="docs/img/placa_leds.jpg" width="450"><br><i>Figura 10 - LEDs acesos, hora de apertar</i></p>
+<p align="center"><img src="docs/img/placa_leds.jpg" width="450"><br><i>Figura 10 - LEDs acesos, hora de apertar o KEY0</i></p>
 
-<p align="center"><img src="docs/img/placa_tempo.jpg" width="450"><br><i>Figura 11 - Tempo de reação no display</i></p>
+<p align="center"><img src="docs/img/placa_tempo.jpg" width="450"><br><i>Figura 11 - Tempo de reação de 0,150 s no display</i></p>
 
 <p align="center"><img src="docs/img/placa_cedo.jpg" width="450"><br><i>Figura 12 - Jogador apertou antes da hora (CEdO)</i></p>
--->
 
-(em andamento)
+<p align="center"><img src="docs/img/placa_9999.jpg" width="450"><br><i>Figura 13 - Ninguém apertou e o tempo parou em 9.999</i></p>
 
 ## 12. Problemas que podem acontecer
 
-- O Programmer não acha a placa: falta o driver do USB-Blaster.
+- O Programmer não acha a placa ("Programming hardware cable not detected"): falta o driver do USB-Blaster. No Windows 11 aconteceu com a gente o erro de código 39 ao instalar o driver; resolvemos desligando a Integridade de memória (Segurança do Windows > Segurança do dispositivo > Isolamento de núcleo) e reiniciando o computador.
 - O display mostra coisa estranha: algum pino errado, conferir com o manual da DE10-Lite.
 - O Eclipse dá "System ID mismatch": gravar o `.sof` de novo e gerar o BSP de novo.
 - O display fica parado em `PLAY`: o programa não está rodando no Nios.
@@ -435,7 +446,7 @@ O timing passa com folga: o caminho mais lento leva uns 12 ns e o clock dá 20 n
 
 ## 13. Conclusão
 
-O jogo atendeu ao que a gente queria: o tempo de reação é medido com precisão de 1 ms e a parada acontece no mesmo clock do aperto, porque quem mede é o hardware. O Nios II ficou só com as regras do jogo, que são bem mais simples de escrever em C, como o ranking e as mensagens no terminal.
+O jogo funcionou na placa e atendeu ao que a gente queria: o tempo de reação é medido com precisão de 1 ms e a parada acontece no mesmo clock do aperto, porque quem mede é o hardware. O Nios II ficou só com as regras do jogo, que são bem mais simples de escrever em C, como o ranking e as mensagens no terminal.
 
 A parte mais trabalhosa foi a ligação entre o Nios e o Verilog pelos PIOs, e acertar a versão do Quartus que suporta ao mesmo tempo a DE10-Lite e o Nios II no Windows. Separar o projeto em módulos pequenos ajudou bastante, porque deu pra testar cada parte no ModelSim antes de juntar tudo.
 
