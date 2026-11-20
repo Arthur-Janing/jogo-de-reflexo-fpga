@@ -101,7 +101,7 @@ JOGAR.bat    grava a placa e roda o jogo
 - Quartus Prime Lite 18.1, com o suporte ao MAX 10 (o Nios II EDS já vem junto)
 - Placa DE10-Lite (chip 10M50DAF484C7G) e cabo USB
 - Driver do USB-Blaster (fica em `C:\intelFPGA_lite\18.1\quartus\drivers\usb-blaster`)
-- ModelSim-Intel FPGA Starter Edition 18.1, só pra rodar a simulação (opcional)
+- ModelSim, só pra rodar a simulação (a gente usou o ModelSim-Altera 10.1d que veio com o Quartus 13.1)
 - Monitor com entrada VGA, se quiser ver a tela colorida (opcional)
 
 Usamos a versão 18.1 porque ela suporta a DE10-Lite (MAX 10) e é a última em que o Nios II funciona no Windows sem precisar instalar o WSL.
@@ -190,7 +190,7 @@ Pra rodar os dois testes no ModelSim: File > Change Directory, escolher a pasta 
 do sim/simular.do
 ```
 
-No final de cada teste aparece `TODOS OS TESTES PASSARAM`.
+No final de cada teste aparece `TODOS OS TESTES PASSARAM`. O teste do jogo demora uns 4 minutos, porque simula mais de meio segundo clock por clock.
 
 **Compilação** (Quartus Prime Lite 18.1, 10M50DAF484C7G):
 
@@ -209,6 +209,8 @@ No final de cada teste aparece `TODOS OS TESTES PASSARAM`.
 - O display mostra coisa estranha: algum pino errado, conferir com o manual da DE10-Lite.
 - O Eclipse dá "System ID mismatch": gravar o `.sof` de novo e gerar o BSP de novo.
 - O display fica parado em `PLAY`: o programa não está rodando no Nios.
+- O jogo trava no meio: não pode fechar a janela do terminal do Nios, porque o `printf` fica esperando o computador ler. Se fechar, é só rodar o `JOGAR.bat` de novo.
+- O monitor diz "sem sinal": conferir o cabo VGA e se a entrada do monitor está em VGA. Monitor só com HDMI precisa de um adaptador VGA para HDMI ativo (com USB).
 
 ## Referências
 
