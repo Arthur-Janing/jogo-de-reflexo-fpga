@@ -9,7 +9,7 @@ vlib work
 
 # os arquivos do hw nao tem `timescale, entao passamos aqui (igual ao do testbench)
 vlog -timescale 1ns/1ps hw/divisor_1ms.v hw/cronometro_ms.v hw/sorteio.v hw/decod_7seg.v hw/display.v
-vlog -timescale 1ns/1ps hw/vga_sync.v hw/tela.v hw/reflexo_top.v
+vlog -timescale 1ns/1ps hw/vga_sync.v hw/digito_tela.v hw/tela.v hw/reflexo_top.v
 vlog -timescale 1ns/1ps sim/sistema_nios_falso.v sim/tb_reflexo.v sim/tb_vga.v
 
 # teste do jogo (cronometro, displays, sorteio)

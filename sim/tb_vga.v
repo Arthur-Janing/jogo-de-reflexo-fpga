@@ -23,8 +23,16 @@ module tb_vga;
     reg         tvis = 1;
     wire [3:0]  r, g, b;
 
-    tela u_tela (.modo(modo), .contando(contando), .tempo(tempo), .x(tx), .y(ty),
-                 .visivel(tvis), .r(r), .g(g), .b(b));
+    // os segmentos vem do mesmo modulo que controla os displays da placa
+    wire [6:0] h3, h2, h1, h0;
+    wire       p3, p2, p1, p0;
+    display u_display (.modo(modo), .tempo(tempo),
+                       .hex3(h3), .hex2(h2), .hex1(h1), .hex0(h0),
+                       .dp3(p3), .dp2(p2), .dp1(p1), .dp0(p0));
+
+    tela u_tela (.modo(modo), .contando(contando), .tempo(tempo),
+                 .hex3(h3), .hex2(h2), .hex1(h1), .hex0(h0), .ponto(p3),
+                 .x(tx), .y(ty), .visivel(tvis), .r(r), .g(g), .b(b));
 
     integer erros = 0;
 
@@ -66,20 +74,37 @@ module tb_vga;
         if (linhas == 525) $display("  ok   %0d linhas por tela (60 Hz)", linhas);
         else begin $display("  ERRO %0d linhas por tela", linhas); erros = erros + 1; end
 
-        // cores
+        // cores do fundo (ponto fora dos digitos)
         tx = 100; ty = 100;
         modo = 1;                 confere_cor(12'h00F, "PLAY = azul");
         modo = 2;                 confere_cor(12'hF00, "esperando = vermelho");
         contando = 1;             confere_cor(12'h0F0, "contando = verde");
         contando = 0; modo = 3;   confere_cor(12'hFF0, "CEdO = amarelo");
 
-        // barra: 243 ms -> 243/16 = 15 pixels (x de 0 a 15)
+        // digitos grandes: o primeiro digito fica em x 50..149, y 150..329
+        // (100, 155) = segmento a      (100, 240) = segmento g (meio)
+        modo = 1; tx = 100; ty = 155;  confere_cor(12'hFFF, "P: segmento a branco");
+        modo = 2; tx = 100; ty = 155;  confere_cor(12'hF00, "traco: segmento a apagado");
+                  tx = 100; ty = 240;  confere_cor(12'hFFF, "traco: segmento g branco");
+        contando = 1;                  confere_cor(12'h000, "contando: traco preto");
+        contando = 0;
+        modo = 3; tx = 100; ty = 155;  confere_cor(12'h000, "C: segmento a preto");
+                  tx = 100; ty = 240;  confere_cor(12'hFF0, "C: segmento g apagado");
+
+        // resultado 0.243: primeiro digito e 0 (sem o g) e tem o ponto
         modo = 0; tempo = 16'h0243;
-        tx = 10;  ty = 240;       confere_cor(12'hFFF, "barra branca em x=10");
-        tx = 20;  ty = 240;       confere_cor(12'h000, "fim da barra em x=20");
+        tx = 100; ty = 155;       confere_cor(12'hFFF, "0: segmento a branco");
+        tx = 100; ty = 240;       confere_cor(12'h000, "0: segmento g apagado");
+        tx = 170; ty = 320;       confere_cor(12'hFFF, "ponto depois do 0");
+        modo = 1;                 confere_cor(12'h00F, "PLAY sem ponto");
+        modo = 0;
+
+        // barra: 243 ms -> 243/16 = 15 pixels (x de 0 a 15), linhas 380 a 409
+        tx = 10;  ty = 390;       confere_cor(12'hFFF, "barra branca em x=10");
+        tx = 20;  ty = 390;       confere_cor(12'h000, "fim da barra em x=20");
         tx = 10;  ty = 100;       confere_cor(12'h000, "fora da faixa da barra");
         tempo = 16'h9999;
-        tx = 620; ty = 240;       confere_cor(12'hFFF, "9999 ms chega em x=620");
+        tx = 620; ty = 390;       confere_cor(12'hFFF, "9999 ms chega em x=620");
         tvis = 0; modo = 1;       confere_cor(12'h000, "fora da area visivel = preto");
 
         if (erros == 0) $display(">>> TODOS OS TESTES DO VGA PASSARAM");
