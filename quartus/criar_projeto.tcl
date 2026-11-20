@@ -17,6 +17,7 @@ set_global_assignment -name VERILOG_FILE ../hw/sorteio.v
 set_global_assignment -name VERILOG_FILE ../hw/decod_7seg.v
 set_global_assignment -name VERILOG_FILE ../hw/display.v
 set_global_assignment -name VERILOG_FILE ../hw/vga_sync.v
+set_global_assignment -name VERILOG_FILE ../hw/digito_tela.v
 set_global_assignment -name VERILOG_FILE ../hw/tela.v
 set_global_assignment -name VERILOG_FILE ../hw/reflexo_top.v
 set_global_assignment -name QIP_FILE sistema_nios/synthesis/sistema_nios.qip
