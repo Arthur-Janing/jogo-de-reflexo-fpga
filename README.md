@@ -355,6 +355,16 @@ Ligações:
 - File > New > Nios II Application and BSP from Template, usando o `sistema_nios.sopcinfo` e o template Hello World Small.
 - Trocar o `hello_world_small.c` pelo `sw/main.c`, compilar (Build Project) e rodar (Run As > Nios II Hardware).
 
+### 8.4 Gravar e rodar pelo Quartus e pelo Eclipse
+
+Depois do projeto compilado (pelo `MONTAR.bat` ou pelo passo a passo acima), dá pra gravar e rodar sem o `JOGAR.bat`:
+
+1. No Quartus, abrir `quartus/reflexo.qpf` e ir em Tools > Programmer. Em Hardware Setup escolher USB-Blaster, conferir que o `reflexo.sof` está com Program/Configure marcado e clicar em Start (tem que chegar em 100%).
+2. Tools > Nios II Software Build Tools for Eclipse. Na primeira vez, importar os dois projetos em File > Import > Nios II Software Build Tools Project > Import Nios II Software Build Tools Project:
+   - `software/bsp`, com o nome `reflexo_bsp`
+   - `software/app`, com o nome `reflexo`
+3. Botão direito no projeto `reflexo` > Run As > Nios II Hardware. O programa vai pra placa e as mensagens do jogo aparecem na aba Nios II Console.
+
 ## 9. Simulação no ModelSim
 
 Fizemos dois testbenches:
