@@ -1,26 +1,82 @@
-# Jogo de Reflexo na FPGA (DE10-Lite + Nios II)
+<div align="center">
 
-Trabalho da disciplina: um jogo de tempo de reação feito na placa DE10-Lite. Você aperta o botão pra começar, espera os LEDs acenderem e aperta de novo o mais rápido possível. O tempo aparece no display em milissegundos e o programa guarda o recorde e um ranking com os 5 melhores tempos.
+**UNIVERSIDADE FEDERAL DE SANTA CATARINA**<br>
+Engenharia de Computação<br>
+DEC7555 - Linguagem de Descrição de Hardware<br>
+Prof. Rodrigo V. M. Pereira
 
-A parte que mede o tempo foi feita em Verilog, e as regras do jogo rodam num processador Nios II (soft processor) dentro da FPGA, programado em C.
+<br>
 
-## Como jogar
+# Jogo de Reflexo na FPGA com Nios II
+
+**Trabalho Prático 4 - Soft/Hard Processor**
+
+Arthur Henrique Janing<br>
+Arthur Bogoni
+
+Araranguá, 2026
+
+</div>
+
+---
+
+## Resumo
+
+Este trabalho apresenta um jogo de tempo de reação feito na placa DE10-Lite (FPGA MAX 10). O jogador aperta um botão para começar, espera os LEDs acenderem depois de um tempo sorteado e aperta de novo o mais rápido que conseguir. O tempo aparece no display de 7 segmentos em milissegundos, e o programa guarda o recorde e um ranking dos 5 melhores tempos. A medição do tempo foi feita em hardware próprio, em Verilog, e as regras do jogo rodam num processador Nios II (soft processor) montado dentro da FPGA e programado em C. O projeto também tem uma saída VGA opcional, que muda a cor da tela conforme o momento do jogo. O sistema foi simulado no ModelSim e compilado no Quartus Prime Lite 18.1.
+
+**Palavras-chave:** FPGA, Verilog, Nios II, soft processor, DE10-Lite.
+
+## Sumário
+
+1. [Introdução](#1-introdução)
+2. [Como jogar](#2-como-jogar)
+3. [Arquitetura do projeto](#3-arquitetura-do-projeto)
+4. [Módulos em Verilog](#4-módulos-em-verilog)
+5. [O processador Nios II](#5-o-processador-nios-ii)
+6. [Programa em C](#6-programa-em-c)
+7. [Saída VGA](#7-saída-vga)
+8. [Passo a passo para montar e rodar](#8-passo-a-passo-para-montar-e-rodar)
+9. [Simulação no ModelSim](#9-simulação-no-modelsim)
+10. [Compilação no Quartus](#10-compilação-no-quartus)
+11. [Testes na placa](#11-testes-na-placa)
+12. [Problemas que podem acontecer](#12-problemas-que-podem-acontecer)
+13. [Conclusão](#13-conclusão)
+14. [Referências](#14-referências)
+
+---
+
+## 1. Introdução
+
+O objetivo do trabalho era fazer um projeto em FPGA que tivesse um processador, hard ou soft, e documentar o passo a passo no GitHub. A gente escolheu um jogo de reflexo porque ele usa bem as duas partes: o hardware mede o tempo com precisão e o processador cuida das regras.
+
+Requisitos do trabalho e como foram atendidos:
+
+| Requisito | Como atendemos |
+|---|---|
+| Ter um hard ou soft processor | Nios II/e, um soft processor montado no Platform Designer, rodando o `sw/main.c` |
+| Relatório no GitHub com passo a passo | Este README (seção 8 tem o passo a passo) |
+| Apresentação para a turma | Jogo ao vivo, com a turma jogando |
+
+A maior parte do projeto está em Verilog (pasta `hw`). O C só cuida das regras do jogo.
+
+Ferramentas usadas:
+
+- Quartus Prime Lite 18.1, com o suporte ao MAX 10 (o Platform Designer e o Nios II EDS já vêm junto)
+- ModelSim-Altera 10.1d, para a simulação
+- Placa DE10-Lite (chip 10M50DAF484C7G)
+
+Usamos a versão 18.1 do Quartus porque ela suporta a DE10-Lite e é a última em que o Nios II funciona no Windows sem precisar instalar o WSL. A partir da 24.1 o Nios II nem existe mais, só o Nios V.
+
+## 2. Como jogar
 
 - O display mostra `PLAY`. Aperte o **KEY0** pra começar.
 - O display mostra `----`. Espere: depois de 1 a 5 segundos (sorteado) todos os LEDs acendem.
 - Quando os LEDs acenderem, aperte o KEY0 o mais rápido que conseguir.
 - O display mostra seu tempo, por exemplo `0.243` (243 ms).
 - Se apertar antes dos LEDs acenderem, aparece `CEdO` e a rodada não vale.
+- Se ninguém apertar, o tempo para em `9.999`.
 - **KEY1** apaga o recorde e o ranking.
 - Quando sai um recorde novo, os LEDs piscam 3 vezes.
-
-Se tiver um monitor ligado na saída VGA da placa, a tela muda de cor junto com o jogo (não é obrigatório, o jogo funciona sem monitor):
-
-- azul: `PLAY`
-- vermelho: esperando, não aperta
-- verde: aperta!
-- amarelo: `CEdO`
-- preto com uma barra branca: o tamanho da barra é o tempo (quanto menor, melhor)
 
 No computador, o terminal do Nios mostra os tempos e o ranking:
 
@@ -34,36 +90,134 @@ Seu tempo: 0.180 s
 ---------------------
 ```
 
-## Requisitos do trabalho
+<!-- FIGURA: print do terminal com o ranking
+<p align="center"><img src="docs/img/terminal.png" width="550"><br><i>Figura 1 - Terminal do Nios mostrando os tempos e o ranking</i></p>
+-->
 
-1. **Ter um hard ou soft processor:** usamos o Nios II/e, que é um soft processor montado dentro da FPGA pelo Platform Designer. Ele roda o `sw/main.c`.
-2. **Relatório no GitHub com passo a passo:** é este README.
-3. **Apresentação pra turma:** vamos apresentar jogando ao vivo.
-
-A maior parte do projeto está em Verilog (pasta `hw`). O C só cuida das regras do jogo.
-
-## Como funciona
+## 3. Arquitetura do projeto
 
 A ideia foi dividir assim:
 
-- **Hardware (Verilog):** mede o tempo com precisão de 1 ms e para o tempo no exato momento em que o botão é apertado. Também sorteia o número da espera e controla os displays.
+- **Hardware (Verilog):** mede o tempo com precisão de 1 ms e para o tempo no exato momento em que o botão é apertado. Também sorteia o número da espera e controla os displays e o VGA.
 - **Nios II (C):** espera o tempo sorteado, vê se o jogador apertou cedo, acende os LEDs, lê o tempo medido e atualiza recorde e ranking.
 
-Fizemos a medição em hardware porque assim o tempo para no mesmo clock em que o botão é apertado (20 ns a 50 MHz), sem depender do programa.
+Fizemos a medição em hardware porque assim o tempo para no mesmo clock em que o botão é apertado (20 ns a 50 MHz), sem depender do programa. Se fosse no C, o tempo dependeria de quanto o laço demora para ver o botão.
 
-### Módulos em Verilog (`hw/`)
+<p align="center"><img src="docs/img/arquitetura.png" width="700"><br><i>Figura 2 - Diagrama de blocos do projeto</i></p>
 
-- `divisor_1ms.v`: conta 50.000 clocks e gera um pulso a cada 1 ms. Só conta enquanto o cronômetro está medindo, pra começar sempre do zero.
-- `cronometro_ms.v`: soma 1 a cada ms, em BCD (um dígito decimal a cada 4 bits), de 0.000 até 9.999 s. Quando o botão é apertado, ele congela o tempo.
-- `sorteio.v`: um contador de 12 bits que fica girando a 50 MHz. O Nios lê o valor dele na hora que o jogador aperta pra começar, então o número sai diferente toda vez.
-- `decod_7seg.v`: converte um dígito pros 7 segmentos.
-- `display.v`: escolhe o que aparece no display (tempo, `PLAY`, `----` ou `CEdO`). Usamos os 4 displays da direita, o HEX5 e o HEX4 ficam apagados.
-- `vga_sync.v`: gera o sincronismo do VGA em 640x480 a 60 Hz. O pixel é de 25 MHz, então ele anda um pixel a cada 2 clocks de 50 MHz.
-- `tela.v`: escolhe a cor de cada pixel conforme o momento do jogo. Na hora do resultado desenha uma barra com 1 pixel a cada 16 ms.
-- `reflexo_top.v`: liga tudo nos pinos da placa. Também tem um sincronizador de 2 flip-flops no botão, porque o botão é um sinal externo e pode mudar a qualquer momento.
-- `teste_sem_nios_top.v`: um top só pra testar o hardware sem o Nios, usando as chaves.
+O botão vai direto para o cronômetro, passando só pelo sincronizador. O Nios conversa com o nosso hardware pelos PIOs.
 
-### Ligação entre o Nios e o Verilog
+Arquivos do projeto:
+
+```
+hw/          Verilog (9 módulos)
+sw/main.c    programa do Nios II
+sim/         testbenches e o script do ModelSim
+quartus/     scripts do Platform Designer e do Quartus, pinos e clock
+docs/img/    figuras deste relatório
+MONTAR.bat   compila tudo
+JOGAR.bat    grava a placa e roda o jogo
+```
+
+## 4. Módulos em Verilog
+
+| Arquivo | Linhas | O que faz |
+|---|---|---|
+| `divisor_1ms.v` | 34 | gera um pulso a cada 1 ms |
+| `cronometro_ms.v` | 70 | conta o tempo em BCD e congela no aperto |
+| `sorteio.v` | 18 | contador de 12 bits pro sorteio |
+| `decod_7seg.v` | 26 | converte um dígito pros 7 segmentos |
+| `display.v` | 52 | escolhe o que aparece nos displays |
+| `vga_sync.v` | 52 | sincronismo do VGA 640x480 |
+| `tela.v` | 54 | cor de cada pixel do monitor |
+| `reflexo_top.v` | 112 | liga tudo nos pinos da placa |
+| `teste_sem_nios_top.v` | 50 | top pra testar o hardware sem o Nios |
+
+### 4.1 `divisor_1ms.v`
+
+O clock da DE10-Lite é 50 MHz, então 1 ms são 50.000 ciclos. O módulo conta até 49.999 e solta um pulso `tique` de um ciclo.
+
+```verilog
+else if (contador == CLOCKS_POR_MS - 1) begin
+    contador <= 0;
+    tique    <= 1;
+end
+```
+
+Ele só conta enquanto a entrada `ligado` vale 1. Quando desliga, volta pra zero. Assim, quando o cronômetro é armado, o primeiro milissegundo é sempre inteiro. Sem isso a medida podia errar em até 1 ms.
+
+### 4.2 `cronometro_ms.v`
+
+Soma 1 a cada `tique`, em BCD (um dígito decimal a cada 4 bits), de 0.000 até 9.999 s. Funciona igual a um hodômetro: quando a unidade passa de 9, volta a 0 e vai um para a dezena.
+
+- `zerar = 1`: volta pra 0.000
+- `armar = 1`: começa a contar
+- `botao = 1` com o cronômetro armado: liga `parado` e congela o tempo
+
+```verilog
+else if (armar && !parado) begin
+    if (botao) begin
+        parado <= 1;              // congela o tempo
+    end
+    else if (tique) begin
+        ...
+```
+
+Usamos BCD porque cada grupo de 4 bits já é um dígito pronto pro display, sem precisar dividir por 10.
+
+### 4.3 `sorteio.v`
+
+Um contador de 12 bits (0 a 4095) que soma 1 a cada clock. O Nios lê o valor na hora em que o jogador aperta pra começar. Como ninguém consegue apertar sempre no mesmo instante, o número sai diferente toda vez. A espera é 1000 ms + esse número, ou seja, de 1 a 5,1 s.
+
+### 4.4 `decod_7seg.v` e `display.v`
+
+O `decod_7seg` é um `case` que converte um dígito de 0 a 9 nos 7 segmentos. Na DE10-Lite os segmentos acendem com 0.
+
+O `display` escolhe o que aparece nos 4 displays da direita, conforme o modo que o Nios manda:
+
+| modo | Mostra |
+|---|---|
+| 0 | o tempo, ex. `0.243` |
+| 1 | `PLAY` |
+| 2 | `----` |
+| 3 | `CEdO` |
+
+As letras são `localparam` com o desenho de cada uma. O HEX5 e o HEX4 ficam apagados.
+
+### 4.5 `reflexo_top.v`
+
+Liga os pinos da placa, o sistema do Nios e os nossos módulos. Também tem um sincronizador de 2 flip-flops no botão:
+
+```verilog
+always @(posedge MAX10_CLK1_50) begin
+    botao_a <= ~KEY[0];
+    botao_b <= botao_a;
+end
+```
+
+O botão é um sinal externo e pode mudar a qualquer momento, inclusive no meio de uma borda do clock. Passando por dois flip-flops, o valor que chega no cronômetro já está estável. O `~` inverte o botão, porque o KEY vale 0 quando apertado.
+
+### 4.6 `teste_sem_nios_top.v`
+
+Um top só pra testar o hardware sem o Nios, usando as chaves: SW0 arma, SW1 zera, SW9 e SW8 mudam o modo do display e o KEY0 para o tempo. Foi útil pra testar o cronômetro e os displays antes de colocar o processador.
+
+## 5. O processador Nios II
+
+O Nios II é um processador que não existe como chip: ele é montado dentro da FPGA, usando os blocos lógicos dela. Por isso é um soft processor. Usamos a versão Nios II/e, a mais simples, que é gratuita no Quartus Lite.
+
+O sistema foi montado no Platform Designer (`sistema_nios.qsys`) com estes componentes:
+
+| Componente | Nome | Para que serve |
+|---|---|---|
+| Nios II/e | `cpu` | roda o programa em C |
+| On-Chip Memory (32 KB) | `memoria` | guarda o programa e as variáveis |
+| JTAG UART | `jtag_uart` | manda os `printf` pro terminal do computador |
+| System ID | `sysid` | identifica o sistema |
+| PIOs | `botoes`, `leds`, `comando`, `modo`, `tempo`, `sorteio` | ligação entre o C e o Verilog |
+
+<!-- FIGURA: print do Platform Designer com o sistema aberto
+<p align="center"><img src="docs/img/platform_designer.png" width="700"><br><i>Figura 3 - Sistema do Nios II no Platform Designer</i></p>
+-->
 
 O Nios conversa com o nosso hardware por PIOs (registradores do Platform Designer). No C, cada PIO é um endereço de memória: a gente escreve com `IOWR_ALTERA_AVALON_PIO_DATA` e lê com `IORD_ALTERA_AVALON_PIO_DATA`.
 
@@ -76,41 +230,63 @@ O Nios conversa com o nosso hardware por PIOs (registradores do Platform Designe
 | tempo | entrada | 16 | tempo medido em BCD |
 | sorteio | entrada | 12 | número sorteado |
 
-### Uma rodada
+## 6. Programa em C
+
+O `sw/main.c` tem algumas funções pequenas e um `while (1)` que repete as rodadas. Exemplo de como o C acende os LEDs e lê o tempo:
+
+```c
+IOWR_ALTERA_AVALON_PIO_DATA(LEDS_BASE, 0x3FF);     // acende os 10 LEDs
+int bcd = IORD_ALTERA_AVALON_PIO_DATA(TEMPO_BASE); // le o tempo medido
+```
+
+Uma rodada:
 
 1. O C mostra `PLAY` e espera o KEY0.
-2. Lê o `sorteio` e calcula a espera: 1000 ms + número (de 1 a 5,1 s).
-3. Mostra `----`, zera o cronômetro e espera. Se apertarem antes, mostra `CEdO`.
+2. Lê o `sorteio` e calcula a espera: 1000 ms + número.
+3. Mostra `----`, zera o cronômetro e espera, olhando o botão a cada 1 ms. Se apertarem antes, mostra `CEdO` e a rodada não vale.
 4. Acende os LEDs e arma o cronômetro.
 5. O hardware conta os ms e para sozinho quando o botão é apertado.
-6. O C lê o tempo, mostra no display e atualiza recorde e ranking.
+6. O C lê o tempo, converte de BCD pra número, mostra no display e atualiza recorde e ranking.
 
-## Arquivos
+A conversão do BCD separa os 4 dígitos com deslocamento e máscara. Por exemplo, `0x0243` vira 0×1000 + 2×100 + 4×10 + 3 = 243 ms.
 
-```
-hw/          Verilog
-sw/main.c    programa do Nios II
-sim/         testbench (simulação)
-quartus/     scripts do Platform Designer e do Quartus, pinos e clock
-MONTAR.bat   compila tudo
-JOGAR.bat    grava a placa e roda o jogo
-```
+O ranking é um vetor de 5 posições. Cada tempo novo entra na posição certa (menor primeiro) e os de baixo descem uma casa.
 
-## O que precisa
+## 7. Saída VGA
+
+Se tiver um monitor ligado na saída VGA da placa, a tela muda de cor junto com o jogo. Não é obrigatório, o jogo funciona sem monitor.
+
+| Momento | Tela |
+|---|---|
+| `PLAY` | azul |
+| esperando | vermelha |
+| hora de apertar | verde |
+| `CEdO` | amarela |
+| resultado | preta com uma barra branca do tamanho do tempo |
+
+O `vga_sync.v` gera o sincronismo de 640x480 a 60 Hz. O pixel é de 25 MHz, então ele anda um pixel a cada 2 clocks de 50 MHz. Cada linha tem 800 pixels (640 visíveis) e cada tela tem 525 linhas (480 visíveis): 25.000.000 / (800 × 525) = 60 telas por segundo.
+
+O `tela.v` escolhe a cor de cada pixel. Na hora do resultado, desenha uma barra com 1 pixel a cada 16 ms, então 9.999 ms cabe nos 640 pixels da tela.
+
+<!-- FIGURA: foto do monitor (tela verde ou barra do resultado)
+<p align="center"><img src="docs/img/monitor_vga.jpg" width="500"><br><i>Figura 4 - Saída VGA mostrando o resultado de uma rodada</i></p>
+-->
+
+## 8. Passo a passo para montar e rodar
+
+### 8.1 O que precisa
 
 - Quartus Prime Lite 18.1, com o suporte ao MAX 10 (o Nios II EDS já vem junto)
 - Placa DE10-Lite (chip 10M50DAF484C7G) e cabo USB
 - Driver do USB-Blaster (fica em `C:\intelFPGA_lite\18.1\quartus\drivers\usb-blaster`)
-- ModelSim, só pra rodar a simulação (a gente usou o ModelSim-Altera 10.1d que veio com o Quartus 13.1)
+- ModelSim, só pra rodar a simulação
 - Monitor com entrada VGA, se quiser ver a tela colorida (opcional)
 
-Usamos a versão 18.1 porque ela suporta a DE10-Lite (MAX 10) e é a última em que o Nios II funciona no Windows sem precisar instalar o WSL.
+Os instaladores ficam na página do Quartus Prime Lite 18.1 no site da Altera. Os arquivos são `QuartusLiteSetup-18.1.0.625-windows.exe` e `max10-18.1.0.625.qdz`, que têm que estar na mesma pasta na hora de instalar.
 
-## Passo a passo
+### 8.2 Jeito rápido
 
-### Jeito rápido
-
-O projeto tem que estar em `C:\projetos\jogo-de-reflexo`.
+O projeto tem que estar em `C:\projetos\jogo-de-reflexo` (pode baixar pelo Code > Download ZIP e renomear a pasta).
 
 1. Dois cliques no `MONTAR.bat`. Ele monta o Nios no Platform Designer, compila no Quartus e compila o C. Demora alguns minutos e não precisa da placa. A saída fica em `montar_log.txt`.
 2. Liga a DE10-Lite no USB e dá dois cliques no `JOGAR.bat`. Ele grava a placa, carrega o programa e abre o terminal com o ranking.
@@ -119,7 +295,7 @@ Se não mudou nada no Verilog, o `MONTAR.bat` pula o Quartus e só compila o C d
 
 Pra abrir o projeto no Quartus e mostrar as telas: File > Open Project > `quartus/reflexo.qpf`. O Nios abre pelo Tools > Platform Designer > `quartus/sistema_nios.qsys`.
 
-### Passo a passo manual (pelo Quartus)
+### 8.3 Passo a passo manual (pelo Quartus)
 
 É o que os scripts fazem, mas pelas telas do Quartus.
 
@@ -168,25 +344,14 @@ Ligações:
 - File > New > Nios II Application and BSP from Template, usando o `sistema_nios.sopcinfo` e o template Hello World Small.
 - Trocar o `hello_world_small.c` pelo `sw/main.c`, compilar (Build Project) e rodar (Run As > Nios II Hardware).
 
-## Testes
+## 9. Simulação no ModelSim
 
-**Simulação** no ModelSim (`sim/tb_reflexo.v`):
+Fizemos dois testbenches:
 
-- apertando o botão 243,5 ms depois de armar, mede 0.243
-- o tempo continua parado depois de soltar o botão
-- zerar volta pra 0.000
-- apertar com o cronômetro desarmado não muda nada
-- os displays mostram PLAY, ----, CEdO e 0.243 com o ponto no lugar certo
-- o cronômetro para em 9.999
-- o sorteio fica girando
+- `sim/tb_reflexo.v` testa o projeto inteiro. Como o Nios de verdade não dá pra simular fácil, o `sim/sistema_nios_falso.v` faz o papel dele: tem as mesmas portas, e o testbench escreve direto nos PIOs.
+- `sim/tb_vga.v` testa o VGA.
 
-**Simulação do VGA** (`sim/tb_vga.v`):
-
-- cada linha dura 32 us e o pulso do hsync 3,84 us
-- 525 linhas por tela (60 Hz)
-- as cores de cada momento do jogo e o tamanho da barra
-
-Pra rodar os dois testes no ModelSim: File > Change Directory, escolher a pasta do projeto e digitar no Transcript:
+Pra rodar os dois: no ModelSim, File > Change Directory, escolher a pasta do projeto e digitar no Transcript:
 
 ```
 do sim/simular.do
@@ -194,18 +359,72 @@ do sim/simular.do
 
 No final de cada teste aparece `TODOS OS TESTES PASSARAM`. O teste do jogo demora uns 4 minutos, porque simula mais de meio segundo clock por clock.
 
-**Compilação** (Quartus Prime Lite 18.1, 10M50DAF484C7G):
+Resultados do `tb_reflexo.v`:
 
-- 0 erros
-- 2.062 elementos lógicos de 49.760 (4%)
-- 273.408 bits de memória de 1.677.312 (16%), quase tudo é a RAM de 32 KB do Nios
-- 75 pinos usados
-- timing: sobra 7,668 ns no clock de 50 MHz (pior caso), então passa com folga
-- programa em C: 10 KB, sobram 20 KB pra pilha
+| Teste | Resultado |
+|---|---|
+| apertar 243,5 ms depois de armar | mede 0.243 |
+| soltar o botão depois | o tempo continua 0.243 |
+| zerar | volta pra 0.000 |
+| apertar com o cronômetro desarmado | não muda nada |
+| displays | `PLAY`, `----`, `CEdO` e `0.243` com o ponto no lugar certo |
+| ninguém aperta | para em 9.999 |
+| sorteio | o número fica mudando |
 
-**Na placa:** (colocar fotos e o melhor tempo da turma)
+Resultados do `tb_vga.v`:
 
-## Problemas que podem acontecer
+| Teste | Resultado |
+|---|---|
+| duração de uma linha | 32 us |
+| pulso do hsync | 3,84 us |
+| linhas por tela | 525 (60 Hz) |
+| cores de cada momento | todas certas |
+| barra de 243 ms e de 9.999 ms | tamanho certo |
+
+<!-- FIGURA: print da Wave do tb_reflexo no ModelSim
+<p align="center"><img src="docs/img/modelsim_wave.png" width="700"><br><i>Figura 5 - Forma de onda do tb_reflexo: o tempo congela em 0243 quando o botão é apertado</i></p>
+-->
+
+<!-- FIGURA: print do Transcript com TODOS OS TESTES PASSARAM
+<p align="center"><img src="docs/img/modelsim_transcript.png" width="600"><br><i>Figura 6 - Transcript do ModelSim com o resultado dos testes</i></p>
+-->
+
+## 10. Compilação no Quartus
+
+Resultado da compilação (Quartus Prime Lite 18.1, 10M50DAF484C7G):
+
+| Item | Resultado |
+|---|---|
+| Erros | 0 |
+| Elementos lógicos | 2.062 de 49.760 (4%) |
+| Memória | 273.408 bits de 1.677.312 (16%), quase tudo é a RAM de 32 KB do Nios |
+| Pinos | 75 de 360 |
+| Timing | sobra 7,668 ns no clock de 50 MHz (pior caso) |
+| Programa em C | 10 KB, sobram 20 KB pra pilha |
+
+O timing passa com folga: o caminho mais lento leva uns 12 ns e o clock dá 20 ns por ciclo.
+
+<!-- FIGURA: print do Compilation Report (Flow Summary)
+<p align="center"><img src="docs/img/quartus_compilacao.png" width="650"><br><i>Figura 7 - Resumo da compilação no Quartus</i></p>
+-->
+
+## 11. Testes na placa
+
+<!-- FIGURAS: fotos da placa funcionando
+<p align="center"><img src="docs/img/placa_play.jpg" width="450"><br><i>Figura 8 - Placa no início da rodada, mostrando PLAY</i></p>
+
+<p align="center"><img src="docs/img/placa_espera.jpg" width="450"><br><i>Figura 9 - Esperando os LEDs acenderem</i></p>
+
+<p align="center"><img src="docs/img/placa_leds.jpg" width="450"><br><i>Figura 10 - LEDs acesos, hora de apertar</i></p>
+
+<p align="center"><img src="docs/img/placa_tempo.jpg" width="450"><br><i>Figura 11 - Tempo de reação no display</i></p>
+
+<p align="center"><img src="docs/img/placa_cedo.jpg" width="450"><br><i>Figura 12 - Jogador apertou antes da hora (CEdO)</i></p>
+-->
+
+(em andamento)
+
+## 12. Problemas que podem acontecer
 
 - O Programmer não acha a placa: falta o driver do USB-Blaster.
 - O display mostra coisa estranha: algum pino errado, conferir com o manual da DE10-Lite.
@@ -214,8 +433,15 @@ No final de cada teste aparece `TODOS OS TESTES PASSARAM`. O teste do jogo demor
 - O jogo trava no meio: não pode fechar a janela do terminal do Nios, porque o `printf` fica esperando o computador ler. Se fechar, é só rodar o `JOGAR.bat` de novo.
 - O monitor diz "sem sinal": conferir o cabo VGA e se a entrada do monitor está em VGA. Monitor só com HDMI precisa de um adaptador VGA para HDMI ativo (com USB).
 
-## Referências
+## 13. Conclusão
 
-- A ideia veio do projeto [Response-Time-Game](https://github.com/JVKran/Response-Time-Game), da lista de projetos indicada pelo professor. A gente refez pra DE10-Lite usando o Nios II.
-- Manual da DE10-Lite (Terasic), pra pegar os pinos.
-- Documentação do Nios II e dos periféricos da Altera (PIO e JTAG UART).
+O jogo atendeu ao que a gente queria: o tempo de reação é medido com precisão de 1 ms e a parada acontece no mesmo clock do aperto, porque quem mede é o hardware. O Nios II ficou só com as regras do jogo, que são bem mais simples de escrever em C, como o ranking e as mensagens no terminal.
+
+A parte mais trabalhosa foi a ligação entre o Nios e o Verilog pelos PIOs, e acertar a versão do Quartus que suporta ao mesmo tempo a DE10-Lite e o Nios II no Windows. Separar o projeto em módulos pequenos ajudou bastante, porque deu pra testar cada parte no ModelSim antes de juntar tudo.
+
+## 14. Referências
+
+- JVKRAN. Response-Time-Game. GitHub. Disponível em: https://github.com/JVKran/Response-Time-Game. A ideia do jogo veio desse projeto, da lista indicada pelo professor. A gente refez pra DE10-Lite usando o Nios II.
+- TERASIC. DE10-Lite User Manual. Pinos da placa.
+- INTEL. Nios II Processor Reference Guide.
+- INTEL. Embedded Peripherals IP User Guide (PIO e JTAG UART).
