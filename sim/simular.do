@@ -2,6 +2,9 @@
 # No ModelSim: File > Change Directory e escolher a pasta do projeto
 # Depois digitar no Transcript:  do sim/simular.do
 
+# quando um teste termina ($finish), continua pro proximo
+onbreak {resume}
+
 vlib work
 
 # os arquivos do hw nao tem `timescale, entao passamos aqui (igual ao do testbench)
