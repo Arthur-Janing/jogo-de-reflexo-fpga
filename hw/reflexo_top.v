@@ -101,6 +101,8 @@ module reflexo_top (
         .modo     (modo),
         .contando (comando[0] & ~parado),
         .tempo    (tempo),
+        .hex3     (h3), .hex2 (h2), .hex1 (h1), .hex0 (h0),
+        .ponto    (p3),
         .x        (x),
         .y        (y),
         .visivel  (visivel),
