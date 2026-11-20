@@ -101,6 +101,8 @@ JOGAR.bat    grava a placa e roda o jogo
 - Quartus Prime Lite 18.1, com o suporte ao MAX 10 (o Nios II EDS já vem junto)
 - Placa DE10-Lite (chip 10M50DAF484C7G) e cabo USB
 - Driver do USB-Blaster (fica em `C:\intelFPGA_lite\18.1\quartus\drivers\usb-blaster`)
+- ModelSim-Intel FPGA Starter Edition 18.1, só pra rodar a simulação (opcional)
+- Monitor com entrada VGA, se quiser ver a tela colorida (opcional)
 
 Usamos a versão 18.1 porque ela suporta a DE10-Lite (MAX 10) e é a última em que o Nios II funciona no Windows sem precisar instalar o WSL.
 
@@ -166,7 +168,7 @@ Ligações:
 
 ## Testes
 
-**Simulação** (`sim/tb_reflexo.v`, rodado no Icarus Verilog):
+**Simulação** no ModelSim (`sim/tb_reflexo.v`):
 
 - apertando o botão 243,5 ms depois de armar, mede 0.243
 - o tempo continua parado depois de soltar o botão
@@ -176,25 +178,19 @@ Ligações:
 - o cronômetro para em 9.999
 - o sorteio fica girando
 
-Pra rodar:
-
-```
-iverilog -o tb sim/tb_reflexo.v sim/sistema_nios_falso.v hw/divisor_1ms.v hw/cronometro_ms.v hw/sorteio.v hw/decod_7seg.v hw/display.v hw/vga_sync.v hw/tela.v hw/reflexo_top.v
-vvp tb
-```
-
 **Simulação do VGA** (`sim/tb_vga.v`):
 
 - cada linha dura 32 us e o pulso do hsync 3,84 us
 - 525 linhas por tela (60 Hz)
 - as cores de cada momento do jogo e o tamanho da barra
 
+Pra rodar os dois testes no ModelSim: File > Change Directory, escolher a pasta do projeto e digitar no Transcript:
+
 ```
-iverilog -o tbv sim/tb_vga.v hw/vga_sync.v hw/tela.v
-vvp tbv
+do sim/simular.do
 ```
 
-Também testamos a lógica do C no computador, simulando os botões: rodada normal, apertar cedo, recorde, tempo esgotado e o ranking ficando só com os 5 melhores.
+No final de cada teste aparece `TODOS OS TESTES PASSARAM`.
 
 **Compilação** (Quartus Prime Lite 18.1, 10M50DAF484C7G):
 
