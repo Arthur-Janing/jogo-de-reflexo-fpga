@@ -115,7 +115,9 @@ O projeto tem que estar em `C:\projetos\jogo-de-reflexo`.
 1. Dois cliques no `MONTAR.bat`. Ele monta o Nios no Platform Designer, compila no Quartus e compila o C. Demora alguns minutos e não precisa da placa. A saída fica em `montar_log.txt`.
 2. Liga a DE10-Lite no USB e dá dois cliques no `JOGAR.bat`. Ele grava a placa, carrega o programa e abre o terminal com o ranking.
 
-Se mudar algum `.v`, apaga o `quartus/reflexo.sof` antes de rodar o `MONTAR.bat` de novo, senão ele pula o Quartus.
+Se não mudou nada no Verilog, o `MONTAR.bat` pula o Quartus e só compila o C de novo (fica bem mais rápido).
+
+Pra abrir o projeto no Quartus e mostrar as telas: File > Open Project > `quartus/reflexo.qpf`. O Nios abre pelo Tools > Platform Designer > `quartus/sistema_nios.qsys`.
 
 ### Passo a passo manual (pelo Quartus)
 
