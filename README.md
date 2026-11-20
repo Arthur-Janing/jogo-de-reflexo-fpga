@@ -420,6 +420,7 @@ Gravamos o projeto na DE10-Lite com o `JOGAR.bat` e testamos todas as regras do 
 | Apertar antes dos LEDs | display mostra `CEdO` e a rodada não vale |
 | Ninguém aperta | o tempo para em `9.999` e o terminal mostra Tempo esgotado |
 | Várias rodadas | o ranking fica em ordem, do menor tempo pro maior |
+| Apertar o KEY1 | recorde e ranking apagados, o terminal mostra "Recorde e ranking apagados!" |
 
 O melhor tempo que conseguimos foi 0,150 s. A maioria das rodadas ficou entre 0,15 e 0,40 s.
 
