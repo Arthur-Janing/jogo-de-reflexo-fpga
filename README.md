@@ -22,7 +22,7 @@ Araranguá, 2026
 
 ## Resumo
 
-Este trabalho apresenta um jogo de tempo de reação feito na placa DE10-Lite (FPGA MAX 10). O jogador aperta um botão para começar, espera os LEDs acenderem depois de um tempo sorteado e aperta de novo o mais rápido que conseguir. O tempo aparece no display de 7 segmentos em milissegundos, e o programa guarda o recorde e um ranking dos 5 melhores tempos. A medição do tempo foi feita em hardware próprio, em Verilog, e as regras do jogo rodam num processador Nios II (soft processor) montado dentro da FPGA e programado em C. O projeto também tem uma saída VGA opcional, que muda a cor da tela conforme o momento do jogo. O sistema foi simulado no ModelSim, compilado no Quartus Prime Lite 18.1 e testado na placa.
+Este trabalho apresenta um jogo de tempo de reação feito na placa DE10-Lite (FPGA MAX 10). O jogador aperta um botão para começar, espera os LEDs acenderem depois de um tempo sorteado e aperta de novo o mais rápido que conseguir. O tempo aparece no display de 7 segmentos em milissegundos, e o programa guarda o recorde e um ranking dos 5 melhores tempos. A medição do tempo foi feita em hardware próprio, em Verilog, e as regras do jogo rodam num processador Nios II (soft processor) montado dentro da FPGA e programado em C. O projeto também tem uma saída VGA opcional, que mostra no monitor, em tamanho grande, o mesmo texto dos displays, com a cor da tela mudando conforme o momento do jogo. O sistema foi simulado no ModelSim, compilado no Quartus Prime Lite 18.1 e testado na placa.
 
 **Palavras-chave:** FPGA, Verilog, Nios II, soft processor, DE10-Lite.
 
@@ -108,7 +108,7 @@ O botão vai direto para o cronômetro, passando só pelo sincronizador. O Nios 
 Arquivos do projeto:
 
 ```
-hw/          Verilog (9 módulos)
+hw/          Verilog (10 módulos)
 sw/main.c    programa do Nios II
 sim/         testbenches e o script do ModelSim
 quartus/     scripts do Platform Designer e do Quartus, pinos e clock
@@ -127,8 +127,9 @@ JOGAR.bat    grava a placa e roda o jogo
 | `decod_7seg.v` | 26 | converte um dígito pros 7 segmentos |
 | `display.v` | 52 | escolhe o que aparece nos displays |
 | `vga_sync.v` | 52 | sincronismo do VGA 640x480 |
-| `tela.v` | 54 | cor de cada pixel do monitor |
-| `reflexo_top.v` | 112 | liga tudo nos pinos da placa |
+| `digito_tela.v` | 47 | desenha um dígito de 7 segmentos grande no monitor |
+| `tela.v` | 82 | cor de cada pixel do monitor |
+| `reflexo_top.v` | 114 | liga tudo nos pinos da placa |
 | `teste_sem_nios_top.v` | 50 | top pra testar o hardware sem o Nios |
 
 ### 4.1 `divisor_1ms.v`
@@ -250,19 +251,33 @@ O ranking é um vetor de 5 posições. Cada tempo novo entra na posição certa 
 
 ## 7. Saída VGA
 
-Se tiver um monitor ligado na saída VGA da placa, a tela muda de cor junto com o jogo. Não é obrigatório, o jogo funciona sem monitor.
+Se tiver um monitor ligado na saída VGA da placa, ele funciona como um display gigante: mostra o mesmo texto dos displays da placa, com 4 dígitos grandes no meio da tela, e a cor do fundo muda junto com o jogo. Assim quem está assistindo consegue ver o tempo de longe. Não é obrigatório, o jogo funciona sem monitor.
 
-| Momento | Tela |
-|---|---|
-| `PLAY` | azul |
-| esperando | vermelha |
-| hora de apertar | verde |
-| `CEdO` | amarela |
-| resultado | preta com uma barra branca do tamanho do tempo |
+| Momento | Fundo | Texto |
+|---|---|---|
+| `PLAY` | azul | `PLAY` em branco |
+| esperando | vermelho | `----` em branco |
+| hora de apertar | verde | `----` em preto |
+| `CEdO` | amarelo | `CEdO` em preto |
+| resultado | preto | o tempo (ex. `0.243`) em branco e uma barra branca embaixo, do tamanho do tempo |
+
+O ranking continua aparecendo só no terminal do PC, porque ele fica guardado no programa em C.
 
 O `vga_sync.v` gera o sincronismo de 640x480 a 60 Hz. O pixel é de 25 MHz, então ele anda um pixel a cada 2 clocks de 50 MHz. Cada linha tem 800 pixels (640 visíveis) e cada tela tem 525 linhas (480 visíveis): 25.000.000 / (800 × 525) = 60 telas por segundo.
 
-O `tela.v` escolhe a cor de cada pixel. Na hora do resultado, desenha uma barra com 1 pixel a cada 16 ms, então 9.999 ms cabe nos 640 pixels da tela.
+O `tela.v` escolhe a cor de cada pixel. Os dígitos grandes reaproveitam os mesmos segmentos que vão pros displays da placa (saem do `display.v`), então o monitor sempre mostra igual à placa. Cada dígito é desenhado pelo `digito_tela.v`, que tem 100 x 180 pixels e trata cada segmento como um retângulo de 16 pixels de grossura: se o pixel cai dentro de um segmento aceso, ele é pintado.
+
+```
+ aaaaaa
+f      b
+f      b
+ gggggg
+e      c
+e      c
+ dddddd
+```
+
+Na hora do resultado, também aparece uma barra embaixo dos dígitos com 1 pixel a cada 16 ms, então 9.999 ms cabe nos 640 pixels da tela.
 
 <!-- FIGURA: foto do monitor (tela verde ou barra do resultado)
 <p align="center"><img src="docs/img/monitor_vga.jpg" width="500"><br><i>Figura 4 - Saída VGA mostrando o resultado de uma rodada</i></p>
@@ -331,7 +346,7 @@ Ligações:
 
 **4. Compilar o projeto completo**
 
-- Adicionar o `sistema_nios/synthesis/sistema_nios.qip`, o `hw/sorteio.v`, o `hw/vga_sync.v`, o `hw/tela.v` e o `hw/reflexo_top.v`, e tirar o `teste_sem_nios_top.v`.
+- Adicionar o `sistema_nios/synthesis/sistema_nios.qip`, o `hw/sorteio.v`, o `hw/vga_sync.v`, o `hw/digito_tela.v`, o `hw/tela.v` e o `hw/reflexo_top.v`, e tirar o `teste_sem_nios_top.v`.
 - Top-level: `reflexo_top`. Compilar e gravar com o Programmer.
 
 **5. Programa do Nios**
@@ -375,6 +390,7 @@ Resultados do `tb_vga.v`:
 | pulso do hsync | 3,84 us |
 | linhas por tela | 525 (60 Hz) |
 | cores de cada momento | todas certas |
+| dígitos grandes (`PLAY`, `----`, `CEdO`, `0.243` e o ponto) | segmentos certos, na cor certa |
 | barra de 243 ms e de 9.999 ms | tamanho certo |
 
 <p align="center"><img src="docs/img/modelsim_wave.png" width="700"><br><i>Figura 5 - Forma de onda do tb_reflexo: o tempo congela em 0243 quando o botão é apertado</i></p>
@@ -388,10 +404,10 @@ Resultado da compilação (Quartus Prime Lite 18.1, 10M50DAF484C7G):
 | Item | Resultado |
 |---|---|
 | Erros | 0 |
-| Elementos lógicos | 2.062 de 49.760 (4%) |
+| Elementos lógicos | 2.182 de 49.760 (4%) |
 | Memória | 273.408 bits de 1.677.312 (16%), quase tudo é a RAM de 32 KB do Nios |
 | Pinos | 75 de 360 |
-| Timing | sobra 7,668 ns no clock de 50 MHz (pior caso) |
+| Timing | sobra 8,151 ns no clock de 50 MHz (pior caso) |
 | Programa em C | 10 KB, sobram 20 KB pra pilha |
 
 O timing passa com folga: o caminho mais lento leva uns 12 ns e o clock dá 20 ns por ciclo.
