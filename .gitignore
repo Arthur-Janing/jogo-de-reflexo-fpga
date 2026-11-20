@@ -17,3 +17,8 @@ quartus/*.qpf
 quartus/*.qsf
 software/
 montar_log.txt
+
+# arquivos do ModelSim
+work/
+transcript
+*.wlf
