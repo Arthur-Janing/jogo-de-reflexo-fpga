@@ -1,8 +1,7 @@
 // tb_vga.v
 // Testa o VGA: tempo de uma linha, linhas por tela e as cores da tela.
 //
-// iverilog -o tbv sim/tb_vga.v hw/vga_sync.v hw/tela.v
-// vvp tbv
+// Pra rodar no ModelSim: do sim/simular.do
 
 `timescale 1ns/1ps
 module tb_vga;

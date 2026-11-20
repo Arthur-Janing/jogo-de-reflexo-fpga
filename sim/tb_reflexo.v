@@ -3,8 +3,7 @@
 // medida de 243,5 ms, tempo congelado, zerar, botao desarmado,
 // displays, limite de 9.999 e o sorteio.
 //
-// iverilog -o tb sim/*.v hw/divisor_1ms.v hw/cronometro_ms.v hw/sorteio.v hw/decod_7seg.v hw/display.v hw/vga_sync.v hw/tela.v hw/reflexo_top.v
-// vvp tb
+// Pra rodar no ModelSim: do sim/simular.do
 
 `timescale 1ns/1ps
 module tb_reflexo;
