@@ -1,0 +1,19 @@
+# Arquivos gerados pela compilação (recriados pelo MONTAR.bat)
+quartus/db/
+quartus/incremental_db/
+quartus/sistema_nios/
+quartus/*.qsys
+quartus/*.sopcinfo
+quartus/*.html
+quartus/*.cmp
+quartus/*.rpt
+quartus/*.summary
+quartus/*.smsg
+quartus/*.pin
+quartus/*.jdi
+quartus/*.done
+quartus/*.sof
+quartus/*.qpf
+quartus/*.qsf
+software/
+montar_log.txt
