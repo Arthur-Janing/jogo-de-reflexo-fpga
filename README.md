@@ -213,9 +213,7 @@ O sistema foi montado no Platform Designer (`sistema_nios.qsys`) com estes compo
 | System ID | `sysid` | identifica o sistema |
 | PIOs | `botoes`, `leds`, `comando`, `modo`, `tempo`, `sorteio` | ligação entre o C e o Verilog |
 
-<!-- FIGURA: print do Platform Designer com o sistema aberto
 <p align="center"><img src="docs/img/platform_designer.png" width="700"><br><i>Figura 3 - Sistema do Nios II no Platform Designer</i></p>
--->
 
 O Nios conversa com o nosso hardware por PIOs (registradores do Platform Designer). No C, cada PIO é um endereço de memória: a gente escreve com `IOWR_ALTERA_AVALON_PIO_DATA` e lê com `IORD_ALTERA_AVALON_PIO_DATA`.
 
@@ -379,13 +377,9 @@ Resultados do `tb_vga.v`:
 | cores de cada momento | todas certas |
 | barra de 243 ms e de 9.999 ms | tamanho certo |
 
-<!-- FIGURA: print da Wave do tb_reflexo no ModelSim
 <p align="center"><img src="docs/img/modelsim_wave.png" width="700"><br><i>Figura 5 - Forma de onda do tb_reflexo: o tempo congela em 0243 quando o botão é apertado</i></p>
--->
 
-<!-- FIGURA: print do Transcript com TODOS OS TESTES PASSARAM
 <p align="center"><img src="docs/img/modelsim_transcript.png" width="600"><br><i>Figura 6 - Transcript do ModelSim com o resultado dos testes</i></p>
--->
 
 ## 10. Compilação no Quartus
 
@@ -402,9 +396,7 @@ Resultado da compilação (Quartus Prime Lite 18.1, 10M50DAF484C7G):
 
 O timing passa com folga: o caminho mais lento leva uns 12 ns e o clock dá 20 ns por ciclo.
 
-<!-- FIGURA: print do Compilation Report (Flow Summary)
 <p align="center"><img src="docs/img/quartus_compilacao.png" width="650"><br><i>Figura 7 - Resumo da compilação no Quartus</i></p>
--->
 
 ## 11. Testes na placa
 
