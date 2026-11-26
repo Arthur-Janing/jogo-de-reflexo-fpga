@@ -279,9 +279,7 @@ e      c
 
 Na hora do resultado, também aparece uma barra embaixo dos dígitos com 1 pixel a cada 16 ms, então 9.999 ms cabe nos 640 pixels da tela.
 
-<!-- FIGURA: foto do monitor (tela verde ou barra do resultado)
-<p align="center"><img src="docs/img/monitor_vga.jpg" width="500"><br><i>Figura 4 - Saída VGA mostrando o resultado de uma rodada</i></p>
--->
+<p align="center"><img src="docs/img/monitor_vga.jpg" width="800"><br><i>Figura 4 - Monitor ligado na saída VGA da placa: PLAY (azul), esperando (vermelho), hora de apertar (verde), CEdO (amarelo), resultado de 0,331 s e tempo esgotado (9,999 s, com a barra quase na tela toda)</i></p>
 
 ## 8. Passo a passo para montar e rodar
 
@@ -426,7 +424,7 @@ O timing passa com folga: o caminho mais lento leva uns 12 ns e o clock dá 20 n
 
 ## 11. Testes na placa
 
-Gravamos o projeto na DE10-Lite com o `JOGAR.bat` e testamos todas as regras do jogo. O VGA ainda não foi testado na placa porque não tínhamos um monitor com entrada VGA na hora do teste.
+Gravamos o projeto na DE10-Lite e testamos todas as regras do jogo, primeiro com o `JOGAR.bat` e depois pelo Programmer e pelo Eclipse. Também ligamos um monitor na saída VGA e conferimos todas as telas (Figura 4).
 
 | Teste | Resultado |
 |---|---|
@@ -437,6 +435,7 @@ Gravamos o projeto na DE10-Lite com o `JOGAR.bat` e testamos todas as regras do 
 | Novo recorde | os LEDs piscam 3 vezes e o terminal mostra NOVO RECORDE |
 | Apertar antes dos LEDs | display mostra `CEdO` e a rodada não vale |
 | Ninguém aperta | o tempo para em `9.999` e o terminal mostra Tempo esgotado |
+| Monitor VGA | a cor e o texto mudam junto com os displays, e a barra cresce com o tempo |
 | Várias rodadas | o ranking fica em ordem, do menor tempo pro maior |
 | Apertar o KEY1 | recorde e ranking apagados, o terminal mostra "Recorde e ranking apagados!" |
 
@@ -461,6 +460,7 @@ O melhor tempo que conseguimos foi 0,150 s. A maioria das rodadas ficou entre 0,
 - O Eclipse dá "System ID mismatch": gravar o `.sof` de novo e gerar o BSP de novo.
 - O display fica parado em `PLAY`: o programa não está rodando no Nios.
 - O jogo trava no meio: não pode fechar a janela do terminal do Nios, porque o `printf` fica esperando o computador ler. Se fechar, é só rodar o `JOGAR.bat` de novo.
+- O Eclipse diz que o workspace "is in use or cannot be created": tem outro Eclipse aberto (às vezes escondido, sem janela). Dá pra fechar ele pelo Gerenciador de Tarefas ("Java(TM) Platform SE binary") ou escolher outra pasta de workspace e importar os projetos de novo (seção 8.4).
 - O monitor diz "sem sinal": conferir o cabo VGA e se a entrada do monitor está em VGA. Monitor só com HDMI precisa de um adaptador VGA para HDMI ativo (com USB).
 
 ## 13. Conclusão
